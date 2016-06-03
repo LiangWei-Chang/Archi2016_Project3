@@ -9,6 +9,7 @@
 #include <iostream>
 #include "Execution.h"
 #include "Instruction.h"
+#include "CMP.h"
 
 extern int Address[1024];
 extern map< int,char > Memory;
@@ -85,6 +86,7 @@ void Execute(Instruction ins){
 			if(WriteToZeroDetect(ins.rt)) return;
 			Word = 0;
 			K = reg[ins.rs] + (int) ins.C;
+			Calculate_CMP(K, false);
 			for(int i=0; i<4; i++)
 				Word = (Word << 8) | (unsigned char)Memory[K+i];
 			reg[ins.rt] = Word;
@@ -93,6 +95,7 @@ void Execute(Instruction ins){
 		case 0x21: // lh
 			if(WriteToZeroDetect(ins.rt)) return;
 			K = reg[ins.rs] + (int) ins.C;
+			Calculate_CMP(K, false);
 			Word = Memory[K];
 			for(int i=1; i<2; i++)
 				Word = (Word << 8) | (unsigned char)Memory[K+i];
@@ -103,6 +106,7 @@ void Execute(Instruction ins){
 			if(WriteToZeroDetect(ins.rt)) return;
 			Word = 0;
 			K = reg[ins.rs] + (int) ins.C;
+			Calculate_CMP(K, false);
 			for(int i=0; i<2; i++)
 				Word = (Word << 8) | (unsigned char)Memory[K+i];
 			reg[ins.rt] = Word;
@@ -112,6 +116,7 @@ void Execute(Instruction ins){
 			if(WriteToZeroDetect(ins.rt)) return;
 			Word = 0;
 			K = reg[ins.rs] + (int) ins.C;
+			Calculate_CMP(K, false);
 			reg[ins.rt] = Memory[K];
 			PC += 4;
 			break;
@@ -119,23 +124,27 @@ void Execute(Instruction ins){
 			if(WriteToZeroDetect(ins.rt)) return;
 			Word = 0;
 			K = reg[ins.rs] + (int) ins.C;
+			Calculate_CMP(K, false);
 			reg[ins.rt] = (unsigned char)Memory[K];
 			PC += 4;
 			break;
 		case 0x2B: // sw
 			K = reg[ins.rs] + (int) ins.C;
+			Calculate_CMP(K, false);
 			for(int i=0; i<4; i++)
 				Memory[K+i] = (char)(reg[ins.rt] >> (8*(3-i)));
 			PC += 4;
 			break;
 		case 0x29: // sh
 			K = reg[ins.rs] + (int) ins.C;
+			Calculate_CMP(K, false);
 			for(int i=0; i<2; i++)
 				Memory[K+i] = (char)(reg[ins.rt] >> (8*(1-i)));
 			PC += 4;
 			break;
 		case 0x28: // sb
 			K = reg[ins.rs] + (int) ins.C;
+			Calculate_CMP(K, false);
 			Memory[K] = (char)reg[ins.rt];
 			PC += 4;
 			break;

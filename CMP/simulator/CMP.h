@@ -49,6 +49,6 @@ public:
 	}
 };
 
-void Calculate_CMP();
+void Calculate_CMP(int VA, bool isI);
 
 #endif

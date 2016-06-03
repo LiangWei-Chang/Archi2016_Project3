@@ -26,6 +26,11 @@ map< int,char > Memory;
 int reg[32], PC;
 bool Halt;
 
+vector<TLB_entry> ITLB, DTLB;
+vector<PT_entry> IPageTable, DPageTable;
+vector<vector<Cache_entry>> ICache, DCache;
+vector<Memory_entry> IMemory, DMemory;
+
 void Initialize(){
 	for(int i=0; i<32; i++)
 		reg[i] = 0;
@@ -65,6 +70,47 @@ void PrintCycle(ofstream &fout){
 	fout << "PC: 0x" << setw(8) << setfill('0') << hex << uppercase << PC << endl << endl << endl;
 }
 
+void PrintHitMiss(ofstream &HMout){
+	// Print Cache
+	HMout << "ICache :" << endl;
+	HMout << "# hits: " << I_cache_hits << endl;
+	HMout << "# misses: " << I_cache_misses << endl << endl;
+	HMout << "DCache :" << endl;
+	HMout << "# hits: " << D_cache_hits << endl;
+	HMout << "# misses: " << D_cache_misses << endl << endl;
+	// Print TLB
+	HMout << "ITLB :" << endl;
+	HMout << "# hits: " << I_TLB_hits << endl;
+	HMout << "# misses: " << I_TLB_misses << endl << endl;
+	HMout << "DTLB :" << endl;
+	HMout << "# hits: " << D_TLB_hits << endl;
+	HMout << "# misses: " << D_TLB_misses << endl << endl;
+	// Print PT
+	HMout << "IPageTable :" << endl;
+	HMout << "# hits: " << I_PT_hits << endl;
+	HMout << "# misses: " << I_PT_misses << endl << endl;
+	HMout << "DPageTable :" << endl;
+	HMout << "# hits: " << D_PT_hits << endl;
+	HMout << "# misses: " << D_PT_misses << endl << endl;
+}
+
+void InitializeCMP(){
+	IPageTable.resize(1024/I_Memory_pagesize);
+	DPageTable.resize(1024/D_Memory_pagesize);
+	ITLB.resize(IPageTable.size()/4);
+	DTLB.resize(DPageTable.size()/4);
+	ICache.resize(I_cache_nway);
+	for(int i=0; i<(int)ICache.size(); i++){
+		ICache[i].resize(I_cache_size/I_cache_nway/I_cache_blocksize);
+	}
+	DCache.resize(D_cache_nway);
+	for(int i=0; i<(int)DCache.size(); i++){
+		DCache[i].resize(D_cache_size/D_cache_nway/D_cache_blocksize);
+	}
+	IMemory.resize(I_Memory_size/I_Memory_pagesize);
+	DMemory.resize(D_Memory_size/D_Memory_pagesize);
+}
+
 int main(int argc, char* argv[]){
 	char ch;
 	int Word = 0;
@@ -85,6 +131,7 @@ int main(int argc, char* argv[]){
 	}
 
 	ofstream fout("snapshot.rpt", ios::out);
+	ofstream HMout("report.rpt", ios::out);
 
 	// Read iimage.bin
 	ifstream fin("iimage.bin", ios::in | ios::binary);
@@ -136,12 +183,23 @@ int main(int argc, char* argv[]){
 
 	PrintCycle(fout);
 	Halt = false;
+	InitializeCMP();
 
 	while(!Halt){
-		Calculate_CMP();
+		Calculate_CMP(PC, true);
 		Binary2Assembly();
+		if(Halt) break;
+		cout << "---------------Cycle: " << Cycle << endl;
+		for(int i=0; i<IMemory.size(); i++){
+				cout << "Valid: " << IMemory[i].valid;
+				cout << "  LCU: " << IMemory[i].last_cycle_used << endl;
+				//cout << "  Tag: " << DCache[i][j].tag;
+				//cout << "  MRU: " << DCache[i][j].MRU << endl;
+		}
+		cout << "---------------------" << endl;
 		PrintCycle(fout);
 	}
+	PrintHitMiss(HMout);
 
 	return 0;
 }

@@ -20,6 +20,7 @@ using namespace std;
 
 int Cycle = 0;
 int I_Memory_size, D_Memory_size, I_Memory_pagesize, D_Memory_pagesize, I_cache_size, I_cache_blocksize, I_cache_nway, D_cache_size, D_cache_blocksize, D_cache_nway;
+int I_cache_hits, I_cache_misses, D_cache_hits, D_cache_misses, I_TLB_hits, I_TLB_misses, D_TLB_hits, D_TLB_misses, I_PT_hits, I_PT_misses, D_PT_hits, D_PT_misses;
 int Address[1024];
 map< int,char > Memory;
 int reg[32], PC;
@@ -40,6 +41,19 @@ void Initialize(){
 	D_cache_size = 16;
 	D_cache_blocksize = 4;
 	D_cache_nway = 1;
+
+	I_cache_hits = 0;
+	I_cache_misses = 0;
+	D_cache_hits = 0;
+	D_cache_misses = 0;
+	I_TLB_hits = 0;
+	I_TLB_misses = 0;
+	D_TLB_hits = 0;
+	D_TLB_misses = 0;
+	I_PT_hits = 0;
+	I_PT_misses = 0;
+	D_PT_hits = 0;
+	D_PT_misses = 0;
 }
 
 void PrintCycle(ofstream &fout){

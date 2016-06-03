@@ -8,12 +8,14 @@
 
 #include <iostream>
 #include "Binary2Assembly.h"
-#include "GlobalVar.h"
+#include "Instruction.h"
 #include "Execution.h"
+
+extern int Address[1024], PC;
 
 void Binary2Assembly(){
 	Instruction ins;
-	ins.Word = Global::Address[Global::PC];
+	ins.Word = Address[PC];
 	// Calculate opcode
 	ins.opcode = ((unsigned int) ins.Word) >> 26;
 	// Calculate rs

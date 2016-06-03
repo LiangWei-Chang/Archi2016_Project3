@@ -10,36 +10,65 @@
 #include <fstream>
 #include <iomanip>
 #include <map>
+#include <cstdlib>
 #include <vector>
-#include "GlobalVar.h"
+#include "Instruction.h"
 #include "Binary2Assembly.h"
+#include "CMP.h"
 
 using namespace std;
 
 int Cycle = 0;
+int I_Memory_size, D_Memory_size, I_Memory_pagesize, D_Memory_pagesize, I_cache_size, I_cache_blocksize, I_cache_nway, D_cache_size, D_cache_blocksize, D_cache_nway;
+int Address[1024];
+map< int,char > Memory;
+int reg[32], PC;
+bool Halt;
 
 void Initialize(){
 	for(int i=0; i<32; i++)
-		Global::reg[i] = 0;
+		reg[i] = 0;
 	for(int i=0; i<1024; i++)
-		Global::Address[i] = 0;
+		Address[i] = 0;
+	I_Memory_size = 64;
+	D_Memory_size = 32;
+	I_Memory_pagesize = 8;
+	D_Memory_pagesize = 16;
+	I_cache_size = 16;
+	I_cache_blocksize = 4;
+	I_cache_nway = 4;
+	D_cache_size = 16;
+	D_cache_blocksize = 4;
+	D_cache_nway = 1;
 }
 
 void PrintCycle(ofstream &fout){
 	fout << "cycle " << dec << Cycle++ << endl;
 	for(int i=0; i<32; i++){
 		fout << "$" << setw(2) << setfill('0') << dec << i;
-		fout << ": 0x" << setw(8) << setfill('0') << hex << uppercase << Global::reg[i] << endl;
+		fout << ": 0x" << setw(8) << setfill('0') << hex << uppercase << reg[i] << endl;
 	}
-	fout << "PC: 0x" << setw(8) << setfill('0') << hex << uppercase << Global::PC << endl << endl << endl;
+	fout << "PC: 0x" << setw(8) << setfill('0') << hex << uppercase << PC << endl << endl << endl;
 }
 
-int main(){
+int main(int argc, char* argv[]){
 	char ch;
 	int Word = 0;
 
 	// Initialize register;
 	Initialize();
+	if(argc > 1){
+		I_Memory_size = atoi(argv[1]);
+		D_Memory_size = atoi(argv[2]);
+		I_Memory_pagesize = atoi(argv[3]);
+		D_Memory_pagesize = atoi(argv[4]);
+		I_cache_size = atoi(argv[5]);
+		I_cache_blocksize = atoi(argv[6]);
+		I_cache_nway = atoi(argv[7]);
+		D_cache_size = atoi(argv[8]);
+		D_cache_blocksize = atoi(argv[9]);
+		D_cache_nway = atoi(argv[10]);
+	}
 
 	ofstream fout("snapshot.rpt", ios::out);
 
@@ -54,7 +83,7 @@ int main(){
 		fin.get(ch);
 		Word = (Word << 8) | (unsigned char)ch;
 	}
-	Global::PC = Word;
+	PC = Word;
 	// Read numbers of words
 	for(int i=0; i<4; i++){
 		fin.get(ch);
@@ -67,7 +96,7 @@ int main(){
 			fin.get(ch);
 			Word = (Word << 8) | (unsigned char)ch;
 		}
-		Global::Address[Global::PC+i*4] = Word;
+		Address[PC+i*4] = Word;
 	}
 
 	fin.close();
@@ -79,7 +108,7 @@ int main(){
 		fin.get(ch);
 		Word = (Word << 8) + (unsigned char)ch;
 	}
-	Global::reg[29] = Word;
+	reg[29] = Word;
 	// Numbers of words
 	for(int i=4; i>0; i--){
 		fin.get(ch);
@@ -88,13 +117,14 @@ int main(){
 	int NumbersOfWords = Word;
 	for(int i=0; i<NumbersOfWords*4; i++){
 		fin.get(ch);
-		Global::Memory[i] = ch;
+		Memory[i] = ch;
 	}
 
 	PrintCycle(fout);
-	Global::Halt = false;
+	Halt = false;
 
-	while(!Global::Halt){
+	while(!Halt){
+		Calculate_CMP();
 		Binary2Assembly();
 		PrintCycle(fout);
 	}

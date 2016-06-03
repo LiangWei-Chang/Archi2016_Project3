@@ -1,13 +1,13 @@
 /***************************************************
 
-	File: GlobalVar.h
+	File: Instruction.h
 
 	Author: PinYo
 
 ***************************************************/
 
-#ifndef GlobalVar_h
-#define GlobalVar_h
+#ifndef Instruction_h
+#define Instruction_h
 
 #include <map>
 #include <vector>
@@ -27,14 +27,6 @@ public:
 		funct = 0;
 		C = 0;
 	}
-};
-
-class Global{
-public:
-	static int Address[1024];
-	static map< int,char > Memory;
-	static int reg[32], PC;
-	static bool Halt;
 };
 
 #endif

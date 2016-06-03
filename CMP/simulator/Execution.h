@@ -9,7 +9,7 @@
 #ifndef Execution_h
 #define Execution_h
 
-#include "GlobalVar.h"
+#include "Instruction.h"
 
 void Execute(Instruction);
 

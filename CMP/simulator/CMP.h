@@ -49,4 +49,6 @@ public:
 	}
 };
 
+void Calculate_CMP();
+
 #endif

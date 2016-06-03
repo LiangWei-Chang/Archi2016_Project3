@@ -6,6 +6,7 @@
 
 ***************************************************/
 
+#include <iostream>
 #include "Binary2Assembly.h"
 #include "GlobalVar.h"
 #include "Execution.h"

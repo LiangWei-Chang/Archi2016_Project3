@@ -12,8 +12,11 @@
 #include <map>
 #include <vector>
 #include "GlobalVar.h"
+#include "Binary2Assembly.h"
 
 using namespace std;
+
+int Cycle = 0;
 
 void Initialize(){
 	for(int i=0; i<32; i++)
@@ -22,9 +25,18 @@ void Initialize(){
 		Global::Address[i] = 0;
 }
 
+void PrintCycle(ofstream &fout){
+	fout << "cycle " << dec << Cycle++ << endl;
+	for(int i=0; i<32; i++){
+		fout << "$" << setw(2) << setfill('0') << dec << i;
+		fout << ": 0x" << setw(8) << setfill('0') << hex << uppercase << Global::reg[i] << endl;
+	}
+	fout << "PC: 0x" << setw(8) << setfill('0') << hex << uppercase << Global::PC << endl << endl << endl;
+}
+
 int main(){
 	char ch;
-	int Word = 0, Cycle = 0;
+	int Word = 0;
 
 	// Initialize register;
 	Initialize();
@@ -79,10 +91,12 @@ int main(){
 		Global::Memory[i] = ch;
 	}
 
+	PrintCycle(fout);
 	Global::Halt = false;
 
 	while(!Global::Halt){
 		Binary2Assembly();
+		PrintCycle(fout);
 	}
 
 	return 0;

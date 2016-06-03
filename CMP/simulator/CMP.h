@@ -10,7 +10,7 @@
 #define CMP_h
 
 class TranslationLB{
-
+	
 };
 
 class PageTable{

@@ -9,20 +9,44 @@
 #ifndef CMP_h
 #define CMP_h
 
-class TranslationLB{
-	
+class TLB_entry{
+public:
+	int VPN, PPN, last_cycle_used;
+	bool valid;
+	TLB_entry(){
+		VPN = PPN = last_cycle_used = 0;
+		valid = false;
+	}
 };
 
-class PageTable{
-
+class PT_entry{
+public:
+	int PPN;
+	bool valid;
+	PT_entry(){
+		PPN = 0;
+		valid = false;
+	}
 };
 
-class Cache{
-
+class Cache_entry{
+public:
+	bool valid, MRU;
+	int tag;
+	Cache_entry(){
+		valid = MRU = false;
+		tag = 0;
+	}
 };
 
-class IDMemory{
-
+class Memory_entry{
+public:
+	int last_cycle_used;
+	bool valid;
+	Memory_entry(){
+		last_cycle_used = 0;
+		valid = false;
+	}
 };
 
 #endif

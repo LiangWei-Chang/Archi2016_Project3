@@ -170,7 +170,7 @@ void UpdateDCache(int index, int tag){
 	}
 	if(full){ // All full
 		for(int i=0; i < (int)DCache[index].size(); i++){
-			if(i != flag){
+			if(i != flag || DCache[index].size() == 1){
 				DCache[index][i].MRU = false;
 			}
 		}
@@ -187,7 +187,7 @@ void I_Hit_Misses(int VA){
 	// Search TLB
 	for(int i = 0; i < (int)ITLB.size(); i++){
 		if(ITLB[i].valid){
-			if(ITLB[i].VPN == VPN){
+			if(ITLB[i].VPN == VPN){ // TLB Hit
 				TLB_Hit = true;
 				I_TLB_hits++;
 				PPN = ITLB[i].PPN;
@@ -200,7 +200,7 @@ void I_Hit_Misses(int VA){
 	// TLB Miss
 	if(!TLB_Hit){
 		I_TLB_misses++;
-		if(IPageTable[VPN].valid){
+		if(IPageTable[VPN].valid){ // PT Hit
 			PT_Hit = true;
 			I_PT_hits++;
 			PPN = IPageTable[VPN].PPN;
@@ -253,12 +253,10 @@ void I_Hit_Misses(int VA){
 							tempPA = tempPA | (ICache[i][j].tag << (32 - TagBits));
 							tempPA = tempPA | (i << (32 - TagBits - IndexBits));
 							tempPA = tempPA | j;
-							tempPPN = tempPA >> (int) log2((double)I_Memory_pagesize);
+							tempPPN = tempPA  / I_Memory_pagesize;
 							if(tempPPN == PPN){
 								ICache[i][j].valid = false;
 							}
-							cout << hex << ICache[i][j].tag << " " << i << " " << j << endl;
-							cout << hex << tempPA << endl;
 						}
 					}
 				}
@@ -273,8 +271,8 @@ void I_Hit_Misses(int VA){
 	PA = PPN * I_Memory_pagesize + (VA % I_Memory_pagesize); 
 
 	// Search Cache
-	int tag = (PA/I_cache_blocksize) / I_cache_nway;
-	int index = (PA/I_cache_blocksize) % I_cache_nway;
+	int tag = (PA/I_cache_blocksize) / (int)ICache.size();
+	int index = (PA/I_cache_blocksize) % (int)ICache.size();
 	for(int i=0; i < (int)ICache[index].size(); i++){
 		if(ICache[index][i].valid){
 			if(ICache[index][i].tag == tag){ // ICache Hit
@@ -284,7 +282,6 @@ void I_Hit_Misses(int VA){
 			}
 		}
 	}
-
 	// ICache Miss
 	if(!Cache_Hit){
 		I_cache_misses++;
@@ -302,7 +299,7 @@ void D_Hit_Misses(int VA){
 	// Search TLB
 	for(int i = 0; i < (int)DTLB.size(); i++){
 		if(DTLB[i].valid){
-			if(DTLB[i].VPN == VPN){
+			if(DTLB[i].VPN == VPN){ // TLB Hit
 				TLB_Hit = true;
 				D_TLB_hits++;
 				PPN = DTLB[i].PPN;
@@ -315,7 +312,7 @@ void D_Hit_Misses(int VA){
 	// TLB Miss
 	if(!TLB_Hit){
 		D_TLB_misses++;
-		if(DPageTable[VPN].valid){
+		if(DPageTable[VPN].valid){ // PT Hit
 			PT_Hit = true;
 			D_PT_hits++;
 			PPN = DPageTable[VPN].PPN;
@@ -368,7 +365,7 @@ void D_Hit_Misses(int VA){
 							tempPA = tempPA | (DCache[i][j].tag << (32 - TagBits));
 							tempPA = tempPA | (i << (32 - TagBits - IndexBits));
 							tempPA = tempPA | j;
-							tempPPN = tempPA >> (int) log2((double)D_Memory_pagesize);
+							tempPPN = tempPA / D_Memory_pagesize;
 							if(tempPPN == PPN){
 								DCache[i][j].valid = false;
 							}
@@ -386,8 +383,8 @@ void D_Hit_Misses(int VA){
 	PA = PPN * D_Memory_pagesize + (VA % D_Memory_pagesize);
 
 	// Search Cache
-	int tag = (PA/D_cache_blocksize) / D_cache_nway;
-	int index = (PA/D_cache_blocksize) % D_cache_nway;
+	int tag = (PA/D_cache_blocksize) / (int)DCache.size();
+	int index = (PA/D_cache_blocksize) % (int)DCache.size();
 	for(int i=0; i < (int)DCache[index].size(); i++){
 		if(DCache[index][i].valid){
 			if(DCache[index][i].tag == tag){ // DCache Hit

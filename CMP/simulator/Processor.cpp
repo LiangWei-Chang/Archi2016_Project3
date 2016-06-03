@@ -99,13 +99,13 @@ void InitializeCMP(){
 	DPageTable.resize(1024/D_Memory_pagesize);
 	ITLB.resize(IPageTable.size()/4);
 	DTLB.resize(DPageTable.size()/4);
-	ICache.resize(I_cache_nway);
+	ICache.resize(I_cache_size/I_cache_nway/I_cache_blocksize);
 	for(int i=0; i<(int)ICache.size(); i++){
-		ICache[i].resize(I_cache_size/I_cache_nway/I_cache_blocksize);
+		ICache[i].resize(I_cache_nway);
 	}
-	DCache.resize(D_cache_nway);
+	DCache.resize(D_cache_size/D_cache_nway/D_cache_blocksize);
 	for(int i=0; i<(int)DCache.size(); i++){
-		DCache[i].resize(D_cache_size/D_cache_nway/D_cache_blocksize);
+		DCache[i].resize(D_cache_nway);
 	}
 	IMemory.resize(I_Memory_size/I_Memory_pagesize);
 	DMemory.resize(D_Memory_size/D_Memory_pagesize);
@@ -188,15 +188,18 @@ int main(int argc, char* argv[]){
 	while(!Halt){
 		Calculate_CMP(PC, true);
 		Binary2Assembly();
-		if(Halt) break;
 		cout << "---------------Cycle: " << Cycle << endl;
-		for(int i=0; i<IMemory.size(); i++){
-				cout << "Valid: " << IMemory[i].valid;
-				cout << "  LCU: " << IMemory[i].last_cycle_used << endl;
-				//cout << "  Tag: " << DCache[i][j].tag;
-				//cout << "  MRU: " << DCache[i][j].MRU << endl;
+		for(int i=0; i<ICache.size(); i++){
+			cout << "Set: " << i << endl;
+			for(int j=0; j<ICache[i].size(); j++){
+				cout << "Valid: " << ICache[i][j].valid;
+				cout << "  Tag: " << ICache[i][j].tag;
+				cout << "  MRU: " << ICache[i][j].MRU << endl;
+			}
 		}
 		cout << "---------------------" << endl;
+
+		if(Halt) break;
 		PrintCycle(fout);
 	}
 	PrintHitMiss(HMout);

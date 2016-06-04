@@ -25,7 +25,7 @@ bool WriteToZeroDetect(int WriteDes){
 }
 
 void Execute(Instruction ins){
-	int Word, K;
+	int Word, K = 0;
 	switch(ins.opcode){
 		case 0x00:
 			if(ins.funct!=8 && WriteToZeroDetect(ins.rd)) return;
@@ -83,48 +83,48 @@ void Execute(Instruction ins){
 			PC += 4;
 			break;
 		case 0x23: // lw
-			if(WriteToZeroDetect(ins.rt)) return;
 			Word = 0;
 			K = reg[ins.rs] + (int) ins.C;
 			Calculate_CMP(K, false);
+			if(WriteToZeroDetect(ins.rt)) return;
 			for(int i=0; i<4; i++)
 				Word = (Word << 8) | (unsigned char)Memory[K+i];
 			reg[ins.rt] = Word;
 			PC += 4;
 			break;
 		case 0x21: // lh
-			if(WriteToZeroDetect(ins.rt)) return;
 			K = reg[ins.rs] + (int) ins.C;
 			Calculate_CMP(K, false);
 			Word = Memory[K];
+			if(WriteToZeroDetect(ins.rt)) return;
 			for(int i=1; i<2; i++)
 				Word = (Word << 8) | (unsigned char)Memory[K+i];
 			reg[ins.rt] = Word;
 			PC += 4;
 			break;
 		case 0x25: // lhu
-			if(WriteToZeroDetect(ins.rt)) return;
 			Word = 0;
 			K = reg[ins.rs] + (int) ins.C;
 			Calculate_CMP(K, false);
+			if(WriteToZeroDetect(ins.rt)) return;
 			for(int i=0; i<2; i++)
 				Word = (Word << 8) | (unsigned char)Memory[K+i];
 			reg[ins.rt] = Word;
 			PC += 4;
 			break;
 		case 0x20: // lb
-			if(WriteToZeroDetect(ins.rt)) return;
 			Word = 0;
 			K = reg[ins.rs] + (int) ins.C;
 			Calculate_CMP(K, false);
+			if(WriteToZeroDetect(ins.rt)) return;
 			reg[ins.rt] = Memory[K];
 			PC += 4;
 			break;
 		case 0x24: // lbu
-			if(WriteToZeroDetect(ins.rt)) return;
 			Word = 0;
 			K = reg[ins.rs] + (int) ins.C;
 			Calculate_CMP(K, false);
+			if(WriteToZeroDetect(ins.rt)) return;
 			reg[ins.rt] = (unsigned char)Memory[K];
 			PC += 4;
 			break;

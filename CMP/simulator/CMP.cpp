@@ -127,14 +127,26 @@ void UpdateDPT(){
 
 void UpdateICache(int index, int tag){
 	int flag = 0;
-	bool full = true;
+	bool full = true, allValid = true;
 	for(int i=0; i < (int)ICache[index].size(); i++){
-		if(!ICache[index][i].MRU){
-			ICache[index][i].MRU = true;
+		if(!ICache[index][i].valid){
+			allValid = false;
 			ICache[index][i].valid = true;
 			ICache[index][i].tag = tag;
+			ICache[index][i].MRU = true;
 			flag = i;
 			break;
+		}
+	}
+	if(allValid){
+		for(int i=0; i < (int)ICache[index].size(); i++){
+			if(!ICache[index][i].MRU){
+				ICache[index][i].MRU = true;
+				ICache[index][i].valid = true;
+				ICache[index][i].tag = tag;
+				flag = i;
+				break;
+			}
 		}
 	}
 	for(int i=0; i < (int)ICache[index].size(); i++){
@@ -153,14 +165,26 @@ void UpdateICache(int index, int tag){
 
 void UpdateDCache(int index, int tag){
 	int flag = 0;
-	bool full = true;
+	bool full = true, allValid = true;
 	for(int i=0; i < (int)DCache[index].size(); i++){
-		if(!DCache[index][i].MRU){
-			DCache[index][i].MRU = true;
+		if(!DCache[index][i].valid){
+			allValid = false;
 			DCache[index][i].valid = true;
 			DCache[index][i].tag = tag;
+			DCache[index][i].MRU = true;
 			flag = i;
 			break;
+		}
+	}
+	if(allValid){
+		for(int i=0; i < (int)DCache[index].size(); i++){
+			if(!DCache[index][i].MRU){
+				DCache[index][i].MRU = true;
+				DCache[index][i].valid = true;
+				DCache[index][i].tag = tag;
+				flag = i;
+				break;
+			}
 		}
 	}
 	for(int i=0; i < (int)DCache[index].size(); i++){
@@ -204,6 +228,7 @@ void I_Hit_Misses(int VA){
 			PT_Hit = true;
 			I_PT_hits++;
 			PPN = IPageTable[VPN].PPN;
+			IMemory[PPN].last_cycle_used = Cycle;
 		}
 		else { // PT Miss
 			I_PT_misses++;
@@ -256,6 +281,7 @@ void I_Hit_Misses(int VA){
 							tempPPN = tempPA  / I_Memory_pagesize;
 							if(tempPPN == PPN){
 								ICache[i][j].valid = false;
+								ICache[i][j].MRU = false;
 							}
 						}
 					}
@@ -277,6 +303,9 @@ void I_Hit_Misses(int VA){
 		if(ICache[index][i].valid){
 			if(ICache[index][i].tag == tag){ // ICache Hit
 				I_cache_hits++;
+				if(ICache[index].size()!=1){
+					ICache[index][i].MRU = true;
+				}
 				Cache_Hit = true;
 				break;
 			}
@@ -316,6 +345,7 @@ void D_Hit_Misses(int VA){
 			PT_Hit = true;
 			D_PT_hits++;
 			PPN = DPageTable[VPN].PPN;
+			DMemory[PPN].last_cycle_used = Cycle;
 		}
 		else { // PT Miss
 			D_PT_misses++;
@@ -368,6 +398,7 @@ void D_Hit_Misses(int VA){
 							tempPPN = tempPA / D_Memory_pagesize;
 							if(tempPPN == PPN){
 								DCache[i][j].valid = false;
+								DCache[i][j].MRU = false;
 							}
 						}
 					}
@@ -389,6 +420,9 @@ void D_Hit_Misses(int VA){
 		if(DCache[index][i].valid){
 			if(DCache[index][i].tag == tag){ // DCache Hit
 				D_cache_hits++;
+				if(DCache[index].size()!=1){
+					DCache[index][i].MRU = true;
+				}
 				Cache_Hit = true;
 				break;
 			}

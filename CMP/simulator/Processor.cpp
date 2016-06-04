@@ -111,6 +111,32 @@ void InitializeCMP(){
 	DMemory.resize(D_Memory_size/D_Memory_pagesize);
 }
 
+void PrintICache(){
+	cout << "ICache in Cycle: " << Cycle << endl;
+	for(int i=0; i<(int)ICache.size(); i++){
+		cout << "Set " << i << ":" << endl;
+		for(int j=0; j<(int)ICache[i].size(); j++){
+			cout << "Valid: " << ICache[i][j].valid;
+			cout << " Tag: " << ICache[i][j].tag;
+			cout << " MRU: " << ICache[i][j].MRU << endl;
+		}
+	}
+	cout << "------------------" << endl;
+}
+
+void PrintDCache(){
+	cout << "DCache in Cycle: " << Cycle << endl;
+	for(int i=0; i<(int)DCache.size(); i++){
+		cout << "Set " << i << ":" << endl;
+		for(int j=0; j<(int)DCache[i].size(); j++){
+			cout << "Valid: " << DCache[i][j].valid;
+			cout << " Tag: " << DCache[i][j].tag;
+			cout << " MRU: " << DCache[i][j].MRU << endl;
+		}
+	}
+	cout << "------------------" << endl;
+}
+
 int main(int argc, char* argv[]){
 	char ch;
 	int Word = 0;
@@ -188,17 +214,7 @@ int main(int argc, char* argv[]){
 	while(!Halt){
 		Calculate_CMP(PC, true);
 		Binary2Assembly();
-		cout << "---------------Cycle: " << Cycle << endl;
-		for(int i=0; i<ICache.size(); i++){
-			cout << "Set: " << i << endl;
-			for(int j=0; j<ICache[i].size(); j++){
-				cout << "Valid: " << ICache[i][j].valid;
-				cout << "  Tag: " << ICache[i][j].tag;
-				cout << "  MRU: " << ICache[i][j].MRU << endl;
-			}
-		}
-		cout << "---------------------" << endl;
-
+		PrintDCache();
 		if(Halt) break;
 		PrintCycle(fout);
 	}

@@ -121,6 +121,7 @@ void PrintICache(){
 			cout << " MRU: " << ICache[i][j].MRU << endl;
 		}
 	}
+	cout << "ICache Hit: " << I_cache_hits << "    ICache Miss: " << I_cache_misses << endl;
 	cout << "------------------" << endl;
 }
 
@@ -134,6 +135,7 @@ void PrintDCache(){
 			cout << " MRU: " << DCache[i][j].MRU << endl;
 		}
 	}
+	cout << "DCache Hit: " << D_cache_hits << "    DCache Miss: " << D_cache_misses << endl;
 	cout << "------------------" << endl;
 }
 
@@ -214,7 +216,6 @@ int main(int argc, char* argv[]){
 	while(!Halt){
 		Calculate_CMP(PC, true);
 		Binary2Assembly();
-		PrintDCache();
 		if(Halt) break;
 		PrintCycle(fout);
 	}

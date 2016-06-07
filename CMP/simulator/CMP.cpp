@@ -125,9 +125,41 @@ void UpdateDPT(){
 	DPageTable[VPN].PPN = PPN;
 }
 
+void ReverseICacheMRU(int index, int flag){
+	bool full = true;
+	for(int i=0; i < (int)ICache[index].size(); i++){
+		if(!ICache[index][i].MRU){
+			full = false;
+		}
+	}
+	if(full){ // All full
+		for(int i=0; i < (int)ICache[index].size(); i++){
+			if(i != flag || ICache[index].size() == 1){
+				ICache[index][i].MRU = false;
+			}
+		}
+	}
+}
+
+void ReverseDCacheMRU(int index, int flag){
+	bool full = true;
+	for(int i=0; i < (int)DCache[index].size(); i++){
+		if(!DCache[index][i].MRU){
+			full = false;
+		}
+	}
+	if(full){ // All full
+		for(int i=0; i < (int)DCache[index].size(); i++){
+			if(i != flag || DCache[index].size() == 1){
+				DCache[index][i].MRU = false;
+			}
+		}
+	}
+}
+
 void UpdateICache(int index, int tag){
 	int flag = 0;
-	bool full = true, allValid = true;
+	bool allValid = true;
 	for(int i=0; i < (int)ICache[index].size(); i++){
 		if(!ICache[index][i].valid){
 			allValid = false;
@@ -149,23 +181,12 @@ void UpdateICache(int index, int tag){
 			}
 		}
 	}
-	for(int i=0; i < (int)ICache[index].size(); i++){
-		if(!ICache[index][i].MRU){
-			full = false;
-		}
-	}
-	if(full){ // All full
-		for(int i=0; i < (int)ICache[index].size(); i++){
-			if(i != flag || ICache[index].size() == 1){
-				ICache[index][i].MRU = false;
-			}
-		}
-	}
+	ReverseICacheMRU(index, flag);
 }
 
 void UpdateDCache(int index, int tag){
 	int flag = 0;
-	bool full = true, allValid = true;
+	bool allValid = true;
 	for(int i=0; i < (int)DCache[index].size(); i++){
 		if(!DCache[index][i].valid){
 			allValid = false;
@@ -187,25 +208,14 @@ void UpdateDCache(int index, int tag){
 			}
 		}
 	}
-	for(int i=0; i < (int)DCache[index].size(); i++){
-		if(!DCache[index][i].MRU){
-			full = false;
-		}
-	}
-	if(full){ // All full
-		for(int i=0; i < (int)DCache[index].size(); i++){
-			if(i != flag || DCache[index].size() == 1){
-				DCache[index][i].MRU = false;
-			}
-		}
-	}
+	ReverseDCacheMRU(index, flag);
 }
 
 void I_Hit_Misses(int VA){
-	int BlockOffsetBits = (int) log2((double)ICache[0].size());
+	int BlockOffsetBits = (int) log2((double)I_cache_blocksize);
 	int IndexBits = (int) log2((double)ICache.size());
 	int TagBits = 32 - IndexBits - BlockOffsetBits;
-	bool TLB_Hit = false, PT_Hit = false, Cache_Hit = false;
+	bool TLB_Hit = false, Cache_Hit = false;
 
 	VPN = VA / I_Memory_pagesize;
 	// Search TLB
@@ -225,10 +235,10 @@ void I_Hit_Misses(int VA){
 	if(!TLB_Hit){
 		I_TLB_misses++;
 		if(IPageTable[VPN].valid){ // PT Hit
-			PT_Hit = true;
 			I_PT_hits++;
 			PPN = IPageTable[VPN].PPN;
 			IMemory[PPN].last_cycle_used = Cycle;
+			UpdateITLB();
 		}
 		else { // PT Miss
 			I_PT_misses++;
@@ -277,7 +287,6 @@ void I_Hit_Misses(int VA){
 							int tempPA = 0, tempPPN = 0;
 							tempPA = tempPA | (ICache[i][j].tag << (32 - TagBits));
 							tempPA = tempPA | (i << (32 - TagBits - IndexBits));
-							tempPA = tempPA | j;
 							tempPPN = tempPA  / I_Memory_pagesize;
 							if(tempPPN == PPN){
 								ICache[i][j].valid = false;
@@ -303,9 +312,8 @@ void I_Hit_Misses(int VA){
 		if(ICache[index][i].valid){
 			if(ICache[index][i].tag == tag){ // ICache Hit
 				I_cache_hits++;
-				if(ICache[index].size()!=1){
-					ICache[index][i].MRU = true;
-				}
+				ICache[index][i].MRU = true;
+				ReverseICacheMRU(index, i);
 				Cache_Hit = true;
 				break;
 			}
@@ -319,12 +327,12 @@ void I_Hit_Misses(int VA){
 }
 
 void D_Hit_Misses(int VA){
-	int BlockOffsetBits = (int) log2((double)DCache[0].size());
+	int BlockOffsetBits = (int) log2((double)D_cache_blocksize);
 	int IndexBits = (int) log2((double)DCache.size());
 	int TagBits = 32 - IndexBits - BlockOffsetBits;
-	bool TLB_Hit = false, PT_Hit = false, Cache_Hit = false;
-	VPN = VA / D_Memory_pagesize;
+	bool TLB_Hit = false, Cache_Hit = false;
 	
+	VPN = VA / D_Memory_pagesize;
 	// Search TLB
 	for(int i = 0; i < (int)DTLB.size(); i++){
 		if(DTLB[i].valid){
@@ -342,10 +350,10 @@ void D_Hit_Misses(int VA){
 	if(!TLB_Hit){
 		D_TLB_misses++;
 		if(DPageTable[VPN].valid){ // PT Hit
-			PT_Hit = true;
 			D_PT_hits++;
 			PPN = DPageTable[VPN].PPN;
 			DMemory[PPN].last_cycle_used = Cycle;
+			UpdateDTLB();
 		}
 		else { // PT Miss
 			D_PT_misses++;
@@ -394,7 +402,6 @@ void D_Hit_Misses(int VA){
 							int tempPA = 0, tempPPN = 0;
 							tempPA = tempPA | (DCache[i][j].tag << (32 - TagBits));
 							tempPA = tempPA | (i << (32 - TagBits - IndexBits));
-							tempPA = tempPA | j;
 							tempPPN = tempPA / D_Memory_pagesize;
 							if(tempPPN == PPN){
 								DCache[i][j].valid = false;
@@ -420,9 +427,8 @@ void D_Hit_Misses(int VA){
 		if(DCache[index][i].valid){
 			if(DCache[index][i].tag == tag){ // DCache Hit
 				D_cache_hits++;
-				if(DCache[index].size()!=1){
-					DCache[index][i].MRU = true;
-				}
+				DCache[index][i].MRU = true;
+				ReverseDCacheMRU(index, i);
 				Cache_Hit = true;
 				break;
 			}
